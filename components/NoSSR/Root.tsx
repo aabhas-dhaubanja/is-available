@@ -13,85 +13,62 @@ import { useRouter } from "next/router";
 import Item from "../Item";
 import Value from "../Value";
 import { days, activities } from "../../consts";
-import { isThisWeek } from "date-fns";
+import { showNotification } from "@mantine/notifications";
 
 const Root = (props: Partial<MultiSelectProps>) => {
   const router = useRouter();
-
   const form = useForm();
 
-  const mantain = async () => {
-    const boy = await fetch("/api/get", {
-      method: "POST",
-      body: JSON.stringify({ key: "last-girl-update" }),
-    }).then((response) => response.json());
-
-    const girl = await fetch("/api/get", {
-      method: "POST",
-      body: JSON.stringify({ key: "last-girl-update" }),
-    }).then((response) => response.json());
-
-    const lastBoyUpdate = JSON.parse(boy.value);
-    const lastGirlUpdate = JSON.parse(girl.value);
-
-    if (lastGirlUpdate && !isThisWeek(new Date(lastGirlUpdate))) {
-      fetch("/api/set", {
-        method: "POST",
-        body: JSON.stringify({ key: "girl", value: JSON.stringify({}) }),
-      });
-      fetch("/api/set", {
-        method: "POST",
-        body: JSON.stringify({
-          key: "last-girl-update",
-          value: new Date().toISOString(),
-        }),
-      });
-    }
-
-    if (lastBoyUpdate && !isThisWeek(new Date(lastBoyUpdate))) {
-      fetch("/api/set", {
-        method: "POST",
-        body: JSON.stringify({ key: "boy", value: JSON.stringify({}) }),
-      });
-      fetch("/api/set", {
-        method: "POST",
-        body: JSON.stringify({
-          key: "last-boy-update",
-          value: new Date().toISOString(),
-        }),
-      });
-    }
-  };
-
   React.useEffect(() => {
-    mantain();
-  }, []);
-
-  React.useEffect(() => {
-    fetch("/api/get", {
-      method: "POST",
-      body: JSON.stringify({ key: "girl" }),
-    })
+    fetch("/api/all?key=girl")
       .then((response) => response.json())
       .then((data) => {
+        if (!data.value) return;
         const prevEntries = JSON.parse(data.value);
-        const obj = JSON.parse(prevEntries);
-        form.setValues(obj);
+        form.setValues(prevEntries);
       });
   }, []);
 
   const handleUpdate = (values: typeof form.values) => {
-    fetch("/api/set", {
+    fetch("/api/all", {
       method: "POST",
       body: JSON.stringify({ key: "girl", value: JSON.stringify(values) }),
-    });
-    fetch("/api/set", {
+    })
+      .then(() =>
+        showNotification({
+          title: "Successful",
+          message: "updated successfully",
+          color: "green",
+        })
+      )
+      .catch(() =>
+        showNotification({
+          title: "Error",
+          message: "something went wrong",
+          color: "red",
+        })
+      );
+    fetch("/api/all", {
       method: "POST",
       body: JSON.stringify({
         key: "last-girl-update",
         value: new Date().toISOString(),
       }),
-    });
+    })
+      .then(() =>
+        showNotification({
+          title: "Successful",
+          message: "updated successfully",
+          color: "green",
+        })
+      )
+      .catch(() =>
+        showNotification({
+          title: "Error",
+          message: "something went wrong",
+          color: "red",
+        })
+      );
   };
 
   const handleCompare = () => {

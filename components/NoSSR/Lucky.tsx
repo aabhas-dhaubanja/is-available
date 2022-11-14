@@ -6,44 +6,69 @@ import {
   Group,
   Button,
   MultiSelectProps,
+  Box,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useRouter } from "next/router";
 import Item from "../Item";
 import Value from "../Value";
 import { days, activities } from "../../consts";
+import { showNotification } from "@mantine/notifications";
 
 const Lucky = (props: Partial<MultiSelectProps>) => {
   const router = useRouter();
-
   const form = useForm();
 
   React.useEffect(() => {
-    fetch("/api/get", {
-      method: "POST",
-      body: JSON.stringify({ key: "boy" }),
-    })
+    fetch("/api/all?key=boy")
       .then((response) => response.json())
       .then((data) => {
         if (!data.value) return;
         const prevEntries = JSON.parse(data.value);
-        const obj = JSON.parse(prevEntries);
-        form.setValues(obj);
+        form.setValues(prevEntries);
       });
   }, []);
 
   const handleUpdate = (values: typeof form.values) => {
-    fetch("/api/set", {
+    fetch("/api/all", {
       method: "POST",
       body: JSON.stringify({ key: "boy", value: JSON.stringify(values) }),
-    });
-    fetch("/api/set", {
+    })
+      .then(() =>
+        showNotification({
+          title: "Successful",
+          message: "updated successfully",
+          color: "green",
+        })
+      )
+      .catch(() =>
+        showNotification({
+          title: "Error",
+          message: "something went wrong",
+          color: "red",
+        })
+      );
+    fetch("/api/all", {
       method: "POST",
       body: JSON.stringify({
         key: "last-boy-update",
         value: new Date().toISOString(),
       }),
-    });
+    })
+      .then(() =>
+        showNotification({
+          title: "Successful",
+          message: "updated successfully",
+          color: "green",
+        })
+      )
+      .catch(() =>
+        showNotification({
+          title: "Error",
+          message: "something went wrong",
+          color: "red",
+        })
+      );
   };
 
   const handleCompare = () => {
@@ -83,4 +108,5 @@ const Lucky = (props: Partial<MultiSelectProps>) => {
     </form>
   );
 };
+
 export default Lucky;

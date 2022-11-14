@@ -1,5 +1,5 @@
 import React from "react";
-import { Title, Stack, Group } from "@mantine/core";
+import { Group, Text, Title, Stack } from "@mantine/core";
 import { days, flags } from "../../consts";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFaceKissWinkHeart } from "@fortawesome/free-solid-svg-icons";
@@ -9,29 +9,19 @@ const Compare = () => {
   const [boyActivities, setBoyActivities] = React.useState<any>({});
 
   React.useEffect(() => {
-    fetch("/api/get", {
-      method: "POST",
-      body: JSON.stringify({ key: "girl" }),
-    })
+    fetch("/api/all?key=girl")
       .then((response) => response.json())
       .then((data) => {
         if (!data.value) return;
         const prevEntries = JSON.parse(data.value);
-        const obj = JSON.parse(prevEntries);
-        console.log(obj);
-        setGirlActivities(obj);
+        setGirlActivities(prevEntries);
       });
-    fetch("/api/get", {
-      method: "POST",
-      body: JSON.stringify({ key: "boy" }),
-    })
+    fetch("/api/all?key=boy")
       .then((response) => response.json())
       .then((data) => {
         if (!data.value) return;
         const prevEntries = JSON.parse(data.value);
-        const obj = JSON.parse(prevEntries);
-        console.log(obj);
-        setBoyActivities(obj);
+        setBoyActivities(prevEntries);
       });
   }, []);
 
@@ -56,12 +46,19 @@ const Compare = () => {
         }
 
         return (
-          <Stack key={day}>
+          <Stack align="center" key={day}>
             <Title order={4}>{day}</Title>
-            <Group position="center" noWrap>
+            <Group position="center">
               {commonActivities.map((activity) => {
                 const Flag = flags[activity];
-                return <Flag color="green" key={activity} />;
+                return (
+                  <Group position="center" spacing={0} key={activity} noWrap>
+                    <Text>{activity}</Text>
+                    <Text>(</Text>
+                    <Flag color="green" />
+                    <Text>)</Text>
+                  </Group>
+                );
               })}
             </Group>
           </Stack>
