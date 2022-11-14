@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Stack,
   Title,
@@ -12,19 +13,85 @@ import { useRouter } from "next/router";
 import Item from "../Item";
 import Value from "../Value";
 import { days, activities } from "../../consts";
+import { isThisWeek } from "date-fns";
 
 const Root = (props: Partial<MultiSelectProps>) => {
   const router = useRouter();
 
-  const prevEntries = window.localStorage.getItem("girl");
+  const form = useForm();
 
-  const form = useForm({
-    initialValues: prevEntries ? JSON.parse(prevEntries) : {},
-  });
+  const mantain = async () => {
+    const boy = await fetch("/api/get", {
+      method: "POST",
+      body: JSON.stringify({ key: "last-girl-update" }),
+    }).then((response) => response.json());
+
+    const girl = await fetch("/api/get", {
+      method: "POST",
+      body: JSON.stringify({ key: "last-girl-update" }),
+    }).then((response) => response.json());
+
+    const lastBoyUpdate = JSON.parse(boy.value);
+    const lastGirlUpdate = JSON.parse(girl.value);
+
+    if (lastGirlUpdate && !isThisWeek(new Date(lastGirlUpdate))) {
+      fetch("/api/set", {
+        method: "POST",
+        body: JSON.stringify({ key: "girl", value: JSON.stringify({}) }),
+      });
+      fetch("/api/set", {
+        method: "POST",
+        body: JSON.stringify({
+          key: "last-girl-update",
+          value: new Date().toISOString(),
+        }),
+      });
+    }
+
+    if (lastBoyUpdate && !isThisWeek(new Date(lastBoyUpdate))) {
+      fetch("/api/set", {
+        method: "POST",
+        body: JSON.stringify({ key: "boy", value: JSON.stringify({}) }),
+      });
+      fetch("/api/set", {
+        method: "POST",
+        body: JSON.stringify({
+          key: "last-boy-update",
+          value: new Date().toISOString(),
+        }),
+      });
+    }
+  };
+
+  React.useEffect(() => {
+    mantain();
+  }, []);
+
+  React.useEffect(() => {
+    fetch("/api/get", {
+      method: "POST",
+      body: JSON.stringify({ key: "girl" }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        const prevEntries = JSON.parse(data.value);
+        const obj = JSON.parse(prevEntries);
+        form.setValues(obj);
+      });
+  }, []);
 
   const handleUpdate = (values: typeof form.values) => {
-    window.localStorage.setItem("girl", JSON.stringify(values));
-    window.localStorage.setItem("last-girl-update", new Date().toISOString());
+    fetch("/api/set", {
+      method: "POST",
+      body: JSON.stringify({ key: "girl", value: JSON.stringify(values) }),
+    });
+    fetch("/api/set", {
+      method: "POST",
+      body: JSON.stringify({
+        key: "last-girl-update",
+        value: new Date().toISOString(),
+      }),
+    });
   };
 
   const handleCompare = () => {

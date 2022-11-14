@@ -16,15 +16,34 @@ import { days, activities } from "../../consts";
 const Lucky = (props: Partial<MultiSelectProps>) => {
   const router = useRouter();
 
-  const prevEntries = window.localStorage.getItem("boy");
+  const form = useForm();
 
-  const form = useForm({
-    initialValues: prevEntries ? JSON.parse(prevEntries) : {},
-  });
+  React.useEffect(() => {
+    fetch("/api/get", {
+      method: "POST",
+      body: JSON.stringify({ key: "boy" }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (!data.value) return;
+        const prevEntries = JSON.parse(data.value);
+        const obj = JSON.parse(prevEntries);
+        form.setValues(obj);
+      });
+  }, []);
 
   const handleUpdate = (values: typeof form.values) => {
-    window.localStorage.setItem("boy", JSON.stringify(values));
-    window.localStorage.setItem("last-boy-update", new Date().toISOString());
+    fetch("/api/set", {
+      method: "POST",
+      body: JSON.stringify({ key: "boy", value: JSON.stringify(values) }),
+    });
+    fetch("/api/set", {
+      method: "POST",
+      body: JSON.stringify({
+        key: "last-boy-update",
+        value: new Date().toISOString(),
+      }),
+    });
   };
 
   const handleCompare = () => {

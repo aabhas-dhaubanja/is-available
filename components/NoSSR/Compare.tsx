@@ -5,11 +5,35 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFaceKissWinkHeart } from "@fortawesome/free-solid-svg-icons";
 
 const Compare = () => {
-  const girl = window.localStorage.getItem("girl");
-  const boy = window.localStorage.getItem("boy");
+  const [girlActivities, setGirlActivities] = React.useState<any>({});
+  const [boyActivities, setBoyActivities] = React.useState<any>({});
 
-  const girlActivities = girl ? JSON.parse(girl) : {};
-  const boyActivities = boy ? JSON.parse(boy) : {};
+  React.useEffect(() => {
+    fetch("/api/get", {
+      method: "POST",
+      body: JSON.stringify({ key: "girl" }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (!data.value) return;
+        const prevEntries = JSON.parse(data.value);
+        const obj = JSON.parse(prevEntries);
+        console.log(obj);
+        setGirlActivities(obj);
+      });
+    fetch("/api/get", {
+      method: "POST",
+      body: JSON.stringify({ key: "boy" }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (!data.value) return;
+        const prevEntries = JSON.parse(data.value);
+        const obj = JSON.parse(prevEntries);
+        console.log(obj);
+        setBoyActivities(obj);
+      });
+  }, []);
 
   return (
     <Stack align="center" spacing={50} p={20}>
